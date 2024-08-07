@@ -5,7 +5,7 @@ import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import { useState } from 'react';
 
-export default function Home() {
+export default function Home(){
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
@@ -13,9 +13,11 @@ export default function Home() {
     }
   ])
   const [message, setMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false)
 
   const sendMessage = async () => {
-    if (!message.trim()) return;  // Don't send empty messages
+    if (!message.trim()|| isLoading) return;
+    setIsLoading(true)
   
     setMessage('')
     setMessages((messages) => [
@@ -60,7 +62,16 @@ export default function Home() {
         { role: 'assistant', content: "I'm sorry, but I encountered an error. Please try again later." },
       ])
     }
+    setIsLoading(false)
   }
+
+  const handleKeyPress = (event) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault()
+      sendMessage()
+    }
+  }
+
 
   return (
     <Box
@@ -70,12 +81,14 @@ export default function Home() {
       flexDirection="column"
       justifyContent="center"
       alignItems="center"
+      
     >
       <Stack
         direction={'column'}
         width="500px"
         height="700px"
         border="1px solid black"
+        borderRadius="16px" 
         p={2}
         spacing={3}
       >
@@ -114,14 +127,19 @@ export default function Home() {
             label="Message"
             fullWidth
             value={message}
+            borderRadius="16px" 
             onChange={(e) => setMessage(e.target.value)}
+            onKeyPress={handleKeyPress}
+            disabled={isLoading}
           />
-          <Button variant="contained" onClick={sendMessage}>
-            Send
+          <Button variant="contained" borderRadius="16px" onClick={sendMessage} disabled={isLoading}>
+
+          {isLoading ? 'Sending...' : 'Send'}
           </Button>
         </Stack>
       </Stack>
     </Box>
   );
   
+
 }
