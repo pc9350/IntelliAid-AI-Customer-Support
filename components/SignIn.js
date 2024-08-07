@@ -26,15 +26,15 @@ export default function SignIn() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  useEffect(() => {
-    if (isMobile) {
-      router.push('/mobile-landing');
-    }
-  }, [isMobile, router]);
+//   useEffect(() => {
+//     if (isMobile) {
+//       router.push('/mobile-landing');
+//     }
+//   }, [isMobile, router]);
 
-  if (isMobile) {
-    return null;
-  }
+//   if (isMobile) {
+//     return null;
+//   }
 
 
   const handleSubmit = async (event) => {

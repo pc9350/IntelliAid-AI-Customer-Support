@@ -1,0 +1,26 @@
+.mobile-container {
+    position: relative;
+    min-height: 100vh;
+    background-image: url('/background_1.jpg');
+    background-size: cover;
+    background-position: center;
+  }
+  
+  .back-button {
+    position: fixed; // Change this from absolute to fixed
+    top: 20px;
+    left: 20px;
+    padding: 10px 15px;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    z-index: 1000; // Add this to ensure the button appears on top
+  
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.3);
+    }
+  }
