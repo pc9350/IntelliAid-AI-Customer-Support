@@ -1,0 +1,14 @@
+@import "./_common.scss";
+
+.container {
+  .links {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+
+    .sign-up,
+    .forgot-password {
+      font-size: 15px;
+    }
+  }
+}
