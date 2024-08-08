@@ -18,7 +18,7 @@
     font-size: 1em;
     cursor: pointer;
     transition: background-color 0.3s ease;
-    z-index: 1000; // Add this to ensure the button appears on top
+    z-index: 1000; // Added this to ensure the button appears on top 
   
     &:hover {
       background-color: rgba(255, 255, 255, 0.3);
