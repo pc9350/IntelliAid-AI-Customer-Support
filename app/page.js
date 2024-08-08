@@ -1,31 +1,72 @@
-'use client'
+'use client';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import { useState } from 'react';
+import { styled } from '@mui/material/styles';
 
-export default function Home(){
+// Styled components
+const ChatBox = styled(Box)(({ theme }) => ({
+  width: '90vw',
+  maxWidth: '500px',
+  height: '80vh',
+  maxHeight: '700px',
+  borderRadius: '16px',
+  border: `1px solid ${theme.palette.divider}`,
+  background: `linear-gradient(to top, ${theme.palette.background.default}, ${theme.palette.background.paper})`,
+  boxShadow: theme.shadows[5],
+  padding: theme.spacing(2),
+  display: 'flex',
+  flexDirection: 'column',
+}));
+
+const MessageBox = styled(Box)(({ theme, role }) => ({
+  backgroundColor: role === 'assistant' ? theme.palette.primary.main : theme.palette.secondary.main,
+  color: theme.palette.common.white,
+  borderRadius: '16px',
+  padding: theme.spacing(2),
+  boxShadow: theme.shadows[2],
+}));
+
+const SendButton = styled(Button)(({ theme }) => ({
+  borderRadius: '16px',
+  padding: theme.spacing(2),
+  boxShadow: theme.shadows[2],
+  '&:hover': {
+    backgroundColor: theme.palette.primary.dark,
+    boxShadow: theme.shadows[4],
+  },
+}));
+
+const StyledTextField = styled(TextField)(({ theme }) => ({
+  borderRadius: '16px',
+  '& .MuiInputBase-root': {
+    borderRadius: '16px',
+  },
+}));
+
+export default function Home() {
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
       content: "Hi! I'm the TrendyThreads support assistant. How can I help you today?",
     }
-  ])
+  ]);
   const [message, setMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(false);
 
   const sendMessage = async () => {
-    if (!message.trim()|| isLoading) return;
-    setIsLoading(true)
-  
-    setMessage('')
+    if (!message.trim() || isLoading) return;
+    setIsLoading(true);
+
+    setMessage('');
     setMessages((messages) => [
       ...messages,
       { role: 'user', content: message },
       { role: 'assistant', content: '' },
-    ])
-  
+    ]);
+
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -33,45 +74,44 @@ export default function Home(){
           'Content-Type': 'application/json',
         },
         body: JSON.stringify([...messages, { role: 'user', content: message }]),
-      })
-  
+      });
+
       if (!response.ok) {
-        throw new Error('Network response was not ok')
+        throw new Error('Network response was not ok');
       }
-  
-      const reader = response.body.getReader()
-      const decoder = new TextDecoder()
-  
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+
       while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        const text = decoder.decode(value, { stream: true })
+        const { done, value } = await reader.read();
+        if (done) break;
+        const text = decoder.decode(value, { stream: true });
         setMessages((messages) => {
-          let lastMessage = messages[messages.length - 1]
-          let otherMessages = messages.slice(0, messages.length - 1)
+          let lastMessage = messages[messages.length - 1];
+          let otherMessages = messages.slice(0, messages.length - 1);
           return [
             ...otherMessages,
             { ...lastMessage, content: lastMessage.content + text },
-          ]
-        })
+          ];
+        });
       }
     } catch (error) {
-      console.error('Error:', error)
+      console.error('Error:', error);
       setMessages((messages) => [
         ...messages,
         { role: 'assistant', content: "I'm sorry, but I encountered an error. Please try again later." },
-      ])
+      ]);
     }
-    setIsLoading(false)
-  }
+    setIsLoading(false);
+  };
 
   const handleKeyPress = (event) => {
     if (event.key === 'Enter' && !event.shiftKey) {
-      event.preventDefault()
-      sendMessage()
+      event.preventDefault();
+      sendMessage();
     }
-  }
-
+  };
 
   return (
     <Box
@@ -81,23 +121,15 @@ export default function Home(){
       flexDirection="column"
       justifyContent="center"
       alignItems="center"
-      
+      bgcolor="background.default"
+      padding={2}
     >
-      <Stack
-        direction={'column'}
-        width="500px"
-        height="700px"
-        border="1px solid black"
-        borderRadius="16px" 
-        p={2}
-        spacing={3}
-      >
+      <ChatBox>
         <Stack
-          direction={'column'}
+          direction="column"
           spacing={2}
           flexGrow={1}
           overflow="auto"
-          maxHeight="100%"
         >
           {messages.map((message, index) => (
             <Box
@@ -106,40 +138,32 @@ export default function Home(){
               justifyContent={
                 message.role === 'assistant' ? 'flex-start' : 'flex-end'
               }
+              mb={1}
             >
-              <Box
-                bgcolor={
-                  message.role === 'assistant'
-                    ? 'primary.main'
-                    : 'secondary.main'
-                }
-                color="white"
-                borderRadius={16}
-                p={3}
-              >
+              <MessageBox role={message.role}>
                 {message.content}
-              </Box>
+              </MessageBox>
             </Box>
           ))}
         </Stack>
-        <Stack direction={'row'} spacing={2}>
-          <TextField
+        <Stack direction="row" spacing={2} mt={2} alignItems="center">
+          <StyledTextField
             label="Message"
             fullWidth
             value={message}
-            borderRadius="16px" 
             onChange={(e) => setMessage(e.target.value)}
             onKeyPress={handleKeyPress}
             disabled={isLoading}
           />
-          <Button variant="contained" borderRadius="16px" onClick={sendMessage} disabled={isLoading}>
-
-          {isLoading ? 'Sending...' : 'Send'}
-          </Button>
+          <SendButton
+            variant="contained"
+            onClick={sendMessage}
+            disabled={isLoading}
+          >
+            {isLoading ? 'Sending...' : 'Send'}
+          </SendButton>
         </Stack>
-      </Stack>
+      </ChatBox>
     </Box>
   );
-  
-
 }
