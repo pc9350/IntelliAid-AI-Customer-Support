@@ -6,47 +6,91 @@ import TextField from '@mui/material/TextField';
 import { useState } from 'react';
 import { styled } from '@mui/material/styles';
 
+// Color variables
+const AIColor = 'rgb(54, 74, 201)';
+const CustomerColor = 'rgb(242, 242, 242)';
+const AITextColor = 'white';
+const CustomerTextColor = 'black';
+
 // Styled components
 const ChatBox = styled(Box)(({ theme }) => ({
   width: '90vw',
   maxWidth: '500px',
   height: '80vh',
   maxHeight: '700px',
-  borderRadius: '16px',
+  borderRadius: '25px',
   border: `1px solid ${theme.palette.divider}`,
   background: `linear-gradient(to top, ${theme.palette.background.default}, ${theme.palette.background.paper})`,
   boxShadow: theme.shadows[5],
-  padding: theme.spacing(2),
   display: 'flex',
   flexDirection: 'column',
 }));
 
-const MessageBox = styled(Box)(({ theme, role }) => ({
-  backgroundColor: role === 'assistant' ? theme.palette.primary.main : theme.palette.secondary.main,
-  color: theme.palette.common.white,
-  borderRadius: '16px',
-  padding: theme.spacing(2),
+const Header = styled(Box)(({ theme }) => ({
+  backgroundColor: AIColor,
+  color: AITextColor,
+  fontSize: '2rem',
+  padding: theme.spacing(4),
+  borderRadius: '25px 25px 0 0', // Rounded corners on top
+  margin: 0,
+  position: 'sticky',
+  top: 0,
+  width: '100%',
+  textAlign: 'center',
   boxShadow: theme.shadows[2],
 }));
 
+
+const ContentContainer = styled(Stack)(({ theme }) => ({
+  flexGrow: 1,
+  overflow: 'auto',
+  padding: theme.spacing(2),
+}));
+
+const MessageBox = styled(Box)(({ role }) => ({
+  backgroundColor: role === 'assistant' ? AIColor : CustomerColor,
+  color: role === 'assistant' ? AITextColor : CustomerTextColor,
+  borderRadius: '16px',
+  padding: '16px',
+  boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+  
+})); 
+
 const SendButton = styled(Button)(({ theme }) => ({
   borderRadius: '16px',
+  backgroundColor: CustomerColor,
+  color: CustomerTextColor,
   padding: theme.spacing(2),
   boxShadow: theme.shadows[2],
   '&:hover': {
-    backgroundColor: theme.palette.primary.dark,
+    backgroundColor: AIColor,
+    color: AITextColor,
     boxShadow: theme.shadows[4],
   },
 }));
 
-const StyledTextField = styled(TextField)(({ theme }) => ({
+const StyledTextField = styled(TextField)(({ theme,isSelected }) => ({
   borderRadius: '16px',
   '& .MuiInputBase-root': {
     borderRadius: '16px',
+    border: `2px solid ${isSelected ? CustomerColor: AIColor}`, // Apply border color if selected
+    boxShadow: theme.shadows[2], // Ensure no shadow is applied
+    transition: 'border-color 0.3s ease',
+    '&:focus': {
+      borderColor: AIColor, // Ensure focus also uses AI color
+    },
   },
+  '& .MuiOutlinedInput-notchedOutline': {
+    border: 'none', // Remove default border if using an outlined variant
+  },
+  '& .MuiFormLabel-root.Mui-focused': {
+    color: AIColor, // Change label color when focused
+  },
+
 }));
 
 export default function Home() {
+  const [isTextFieldFocused, setIsTextFieldFocused] = useState(false);
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
@@ -112,6 +156,7 @@ export default function Home() {
       sendMessage();
     }
   };
+  
 
   return (
     <Box
@@ -125,12 +170,10 @@ export default function Home() {
       padding={2}
     >
       <ChatBox>
-        <Stack
-          direction="column"
-          spacing={2}
-          flexGrow={1}
-          overflow="auto"
-        >
+        <Header>
+          TrendyThreads Support
+        </Header>
+        <ContentContainer direction="column" spacing={2}>
           {messages.map((message, index) => (
             <Box
               key={index}
@@ -140,13 +183,13 @@ export default function Home() {
               }
               mb={1}
             >
-              <MessageBox role={message.role}>
+              <MessageBox role={message.role}  >
                 {message.content}
               </MessageBox>
             </Box>
           ))}
-        </Stack>
-        <Stack direction="row" spacing={2} mt={2} alignItems="center">
+        </ContentContainer>
+        <Stack direction="row" spacing={2} mt={2} alignItems="center" padding={2}>
           <StyledTextField
             label="Message"
             fullWidth
@@ -154,6 +197,9 @@ export default function Home() {
             onChange={(e) => setMessage(e.target.value)}
             onKeyPress={handleKeyPress}
             disabled={isLoading}
+            isSelected={isTextFieldFocused}
+            onFocus={() => setIsTextFieldFocused(true)}
+            onBlur={() => setIsTextFieldFocused(false)}
           />
           <SendButton
             variant="contained"
