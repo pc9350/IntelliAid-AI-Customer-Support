@@ -1,7 +1,7 @@
 // pages/_app.js
 import "../styles/globals.css";
 import { Inter } from "next/font/google";
-import MobileLayout from "@/components/MobileLayout";
+import MobileLayout from "/components/MobileLayout";
 
 const inter = Inter({ subsets: ["latin"] });
 

@@ -1,8 +1,7 @@
-// components/ForgotPassword.js
 import React, { useState } from 'react';
 import { auth } from '../firebase';
 import { sendPasswordResetEmail } from 'firebase/auth';
-import './ForgotPassword.scss';
+import styles from './ForgotPassword.module.scss';
 import { useRouter } from 'next/router';
 
 export default function ForgotPassword() {
@@ -27,10 +26,10 @@ export default function ForgotPassword() {
     };
 
   return (
-    <div className="forgot-password-container">
+    <div className={styles.forgotPasswordContainer}>
       <h2>Forgot Password</h2>
       <form onSubmit={handleSubmit}>
-        <div className="input-container">
+        <div className={styles.inputContainer}>
           <label htmlFor="email">Email Address</label>
           <input
             type="email"
@@ -43,7 +42,7 @@ export default function ForgotPassword() {
         </div>
         <button type="submit">Send Reset Email</button>
       </form>
-      {message && <div className="forgot-password-message">{message}</div>}
+      {message && <div className={styles.forgotPasswordMessage}>{message}</div>}
     </div>
   );
 }

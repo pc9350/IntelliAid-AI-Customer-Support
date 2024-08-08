@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import "./SignUp.scss";
+import styles from "./SignUp.module.scss";
 import { auth, db } from "../firebase";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import Link from "next/link";
@@ -45,18 +45,18 @@ export default function SignUp() {
   };
 
   return (
-    <div className="container">
-      <div className="left-section">
-        <div className="welcome-text">
+    <div className={styles.container}>
+      <div className={styles.leftSection}>
+        <div className={styles.welcomeText}>
           <h1>Join IntelliAid</h1>
           <p>Create an account to get started</p>
         </div>
       </div>
-      <div className="right-section">
-        <div className="card">
+      <div className={styles.rightSection}>
+        <div className={styles.card}>
           <h2>Sign Up</h2>
           <form onSubmit={handleSubmit}>
-            <div className="input-container">
+            <div className={styles.inputContainer}>
               <label htmlFor="email">Email Address</label>
               <input
                 type="email"
@@ -66,7 +66,7 @@ export default function SignUp() {
                 required
               />
             </div>
-            <div className="input-container">
+            <div className={styles.inputContainer}>
               <label htmlFor="password">Password</label>
               <input
                 type="password"
@@ -76,7 +76,7 @@ export default function SignUp() {
                 required
               />
             </div>
-            <div className="input-container">
+            <div className={styles.inputContainer}>
               <label htmlFor="confirm-password">Confirm Password</label>
               <input
                 type="password"
@@ -87,7 +87,7 @@ export default function SignUp() {
               />
             </div>
             <button type="submit">Sign Up</button>
-            <div className="links">
+            <div className={styles.links}>
               <Link href="/signin">Already have an account? Sign In</Link>
             </div>
           </form>

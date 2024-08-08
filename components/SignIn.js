@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import "./SignIn.scss";
+import styles from "./SignIn.module.scss";
 import { auth, googleProvider, db } from "../firebase";
 import { signInWithPopup, signInWithEmailAndPassword } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
@@ -25,16 +25,6 @@ export default function SignIn() {
 
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
-
-//   useEffect(() => {
-//     if (isMobile) {
-//       router.push('/mobile-landing');
-//     }
-//   }, [isMobile, router]);
-
-//   if (isMobile) {
-//     return null;
-//   }
 
 
   const handleSubmit = async (event) => {
@@ -88,18 +78,18 @@ export default function SignIn() {
   };
 
   return (
-    <div className="container">
-      <div className="left-section">
-        <div className="welcome-text">
+    <div className={styles.container}>
+      <div className={styles.leftSection}>
+        <div className={styles.welcomeText}>
           <h1>Welcome to IntelliAid</h1>
           <p>An AI Customer Support platform</p>
         </div>
       </div>
-      <div className="right-section">
-        <div className="card">
+      <div className={styles.rightSection}>
+        <div className={styles.card}>
           <h2>Sign In</h2>
           <form onSubmit={handleSubmit}>
-            <div className="input-container">
+            <div className={styles.inputContainer}>
               <label htmlFor="email">Email Address</label>
               <input
                 type="email"
@@ -109,7 +99,7 @@ export default function SignIn() {
                 required
               />
             </div>
-            <div className="input-container">
+            <div className={styles.inputContainer}>
               <label htmlFor="password">Password</label>
               <input
                 type="password"
@@ -122,16 +112,16 @@ export default function SignIn() {
             <button type="submit">Sign In</button>
             <button
               type="button"
-              className="google-sign-in"
+              className={styles.googleSignIn}
               onClick={handleGoogleSignIn}
             >
               <GoogleIcon /> Sign In with Google
             </button>
-            <div className="links">
-              <Link href="/forgot-password" className="forgot-password">
+            <div className={styles.links}>
+              <Link href="/forgot-password" className={styles.forgotPassword}>
                 Forgot password?
               </Link>
-              <Link href="/signup" className="sign-up">
+              <Link href="/signup" className={styles.signUp}>
                 Create Account
               </Link>
             </div>

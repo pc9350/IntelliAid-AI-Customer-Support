@@ -1,4 +1,4 @@
-.mobile-container {
+.mobileContainer {
     position: relative;
     min-height: 100vh;
     background-image: url('/background_1.jpg');
@@ -6,7 +6,7 @@
     background-position: center;
   }
   
-  .back-button {
+  .backButton {
     position: fixed; // Change this from absolute to fixed
     top: 20px;
     left: 20px;

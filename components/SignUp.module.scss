@@ -1,0 +1,9 @@
+@import "./_common.module.scss";
+
+.container {
+  .links {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}

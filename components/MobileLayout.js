@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import './MobileLayout.scss';
+import styles from './MobileLayout.module.scss';
 
 export default function MobileLayout({ children }) {
   const router = useRouter();
@@ -34,9 +34,9 @@ export default function MobileLayout({ children }) {
   if (!isMobile) return children;
 
   return (
-    <div className='mobile-container'>
+    <div className={styles.mobileContainer}>
       {router.pathname !== '/mobile-landing' && (
-        <button className='back-button' onClick={handleBack}>
+        <button className={styles.backButton} onClick={handleBack}>
           ← Back
         </button>
       )}

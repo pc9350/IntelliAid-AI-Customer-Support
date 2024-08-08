@@ -1,6 +1,6 @@
-@import './_common.scss';
+@import "./_common.module.scss";
 
-.mobile-landing-container {
+.mobileLandingContainer {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -11,7 +11,7 @@
   background-size: cover;
   background-position: center;
 
-  .welcome-text {
+  .welcomeText {
     text-align: center;
     color: white;
     margin-bottom: 40px;
@@ -26,7 +26,7 @@
     }
   }
 
-  .mobile-buttons {
+  .mobileButtons {
     display: flex;
     flex-direction: column;
     align-items: center;

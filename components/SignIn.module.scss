@@ -1,4 +1,4 @@
-@import "./_common.scss";
+@import "./_common.module.scss";
 
 .container {
   .links {
@@ -6,8 +6,8 @@
     justify-content: space-between;
     margin-top: 20px;
 
-    .sign-up,
-    .forgot-password {
+    .signUp,
+    .forgotPassword {
       font-size: 15px;
     }
   }
