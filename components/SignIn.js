@@ -40,7 +40,6 @@ export default function SignIn() {
       // Retrieve user info from Firestore
       const userDoc = await getDoc(doc(db, "users", user.uid));
       if (userDoc.exists()) {
-        console.log("User data:", userDoc.data());
         router.push("/landingPage");
       } else {
         console.error("No such document!");
