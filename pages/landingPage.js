@@ -5,6 +5,8 @@ import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import { useState, useRef, useEffect } from 'react';
 import { styled } from '@mui/material/styles';
+import { doc, setDoc } from "firebase/firestore";
+import { db } from "../firebase";
 
 // Color variables
 const AIColor = 'rgb(54, 74, 201)';
@@ -40,12 +42,14 @@ const Header = styled(Box)(({ theme }) => ({
   boxShadow: theme.shadows[2],
 }));
 
-
 const ContentContainer = styled(Stack)(({ theme }) => ({
   flexGrow: 1,
   overflow: 'auto',
   padding: theme.spacing(2),
 }));
+
+
+
 
 const MessageBox = styled(Box)(({ role }) => ({
   backgroundColor: role === 'assistant' ? AIColor : CustomerColor,
@@ -53,8 +57,8 @@ const MessageBox = styled(Box)(({ role }) => ({
   borderRadius: '16px',
   padding: '16px',
   boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
-  
-})); 
+  position: 'relative',
+}));
 
 const SendButton = styled(Button)(({ theme }) => ({
   borderRadius: '16px',
@@ -90,6 +94,18 @@ const StyledTextField = styled(TextField)(({ theme, isSelected }) => {
     },
   };
 });
+const FeedbackButton = styled(Button)(({ theme }) => ({
+  minWidth: '32px',
+  padding: theme.spacing(1),
+  margin: theme.spacing(0.5),
+  borderRadius: '50%',
+  backgroundColor: theme.palette.background.paper,
+  boxShadow: theme.shadows[2],
+  '&:hover': {
+    backgroundColor: theme.palette.action.hover,
+  },
+}));
+
 
 export default function Home() {
   const [isTextFieldFocused, setIsTextFieldFocused] = useState(false);
@@ -101,8 +117,9 @@ export default function Home() {
   ]);
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [feedback, setFeedback] = useState({});
+  const [activeMessage, setActiveMessage] = useState(null);
   const contentContainerRef = useRef(null);
-
   const sendMessage = async () => {
     if (!message.trim() || isLoading) return;
     setIsLoading(true);
@@ -159,12 +176,38 @@ export default function Home() {
       sendMessage();
     }
   };
+
+  const handleFeedback = async(index, type) => {
+    setFeedback((prevFeedback) => ({
+      ...prevFeedback,
+      [index]: type,
+    }));
+    setActiveMessage(null);
+    try {
+      // Reference to the feedback document (you can use the message index or any other identifier)
+      const feedbackRef = doc(db, "feedback", `message_${index}`);
   
+      // Save feedback to Firestore
+      await setDoc(feedbackRef, {
+        messageIndex: index,
+        feedbackType: type,
+        timestamp: new Date(),
+      });
+    } catch (error) {
+      console.error("Error saving feedback:", error);
+    }
+  };
+
+  const toggleFeedbackBox = (index) => {
+    setActiveMessage(activeMessage === index ? null : index);
+  };
   useEffect(() => {
     if (contentContainerRef.current) {
       contentContainerRef.current.scrollTop = contentContainerRef.current.scrollHeight;
     }
   }, [messages]);
+
+  
 
   return (
     <Box
@@ -182,6 +225,7 @@ export default function Home() {
           TrendyThreads Support
         </Header>
         <ContentContainer direction="column" spacing={2} ref={contentContainerRef}>
+       
           {messages.map((message, index) => (
             <Box
               key={index}
@@ -190,13 +234,35 @@ export default function Home() {
                 message.role === 'assistant' ? 'flex-start' : 'flex-end'
               }
               mb={1}
+              position="relative"
             >
-              <MessageBox role={message.role}  >
-                {message.content}
-              </MessageBox>
+              <MessageBox role={message.role} onClick={() => toggleFeedbackBox(index)}>
+  {message.content}
+  {feedback[index] && (
+    <Box mt={1} display="flex" justifyContent="flex-end">
+      <FeedbackButton>
+        {feedback[index] === 'positive' ? '👍' : '👎'}
+      </FeedbackButton>
+    </Box>
+  )}
+  {activeMessage === index && (
+    <Box mt={1} display="flex" justifyContent="center">
+      <FeedbackButton onClick={() => handleFeedback(index, 'positive')}>
+        👍
+      </FeedbackButton>
+      <FeedbackButton onClick={() => handleFeedback(index, 'negative')}>
+        👎
+      </FeedbackButton>
+    </Box>
+  )}
+</MessageBox>
+
+              
+
+              
             </Box>
           ))}
-        </ContentContainer>
+       </ContentContainer>
         <Stack direction="row" spacing={2} mt={2} alignItems="center" padding={2}>
           <StyledTextField
             label="Message"

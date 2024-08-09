@@ -42,40 +42,40 @@ Remember to be patient, empathetic, and positive in all interactions. Strive to 
 
 const handler = async (req, res) => {
   
-    const openai = new OpenAI({ apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY });
-  
-    try {
-      // Use the already parsed request body
-      const data = req.body;
-  
-      const completion = await openai.chat.completions.create({
-        messages: [{ role: 'system', content: systemPrompt }, ...data],
-        model: 'gpt-3.5-turbo',
-        stream: true,
-      });
-  
 
-  
-      res.writeHead(200, {
-        'Content-Type': 'text/plain; charset=utf-8',
-        'Transfer-Encoding': 'chunked',
-      });
-  
-      const encoder = new TextEncoder();
-  
-      for await (const chunk of completion) {
-        const content = chunk.choices[0]?.delta?.content;
-        if (content) {
-          const text = encoder.encode(content);
-          res.write(text);
-        }
+  const openai = new OpenAI({ apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY });
+
+  try {
+    const data = req.body;
+
+    const completion = await openai.chat.completions.create({
+      messages: [{ role: 'system', content: systemPrompt }, ...data],
+      model: 'gpt-3.5-turbo',
+      stream: true,
+    });
+
+    res.writeHead(200, {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'Transfer-Encoding': 'chunked',
+    });
+
+    const encoder = new TextEncoder();
+
+    for await (const chunk of completion) {
+      const content = chunk.choices[0]?.delta?.content;
+      if (content) {
+        const text = encoder.encode(content);
+        res.write(text);
       }
-
-      res.end();
-    } catch (error) {
-      console.error('Error:', error);
-      res.status(500).json({ error: 'Internal Server Error' });
     }
-  };
+
+    res.end();
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+export default handler;
   
-  export default handler;
+ 
