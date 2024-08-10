@@ -80,8 +80,8 @@ export default function SignIn() {
     <div className={styles.container}>
       <div className={styles.leftSection}>
         <div className={styles.welcomeText}>
-          <h1>Welcome to IntelliAid</h1>
-          <p>An AI Customer Support platform</p>
+          <h1>Welcome to TrendyThreads</h1>
+          <p>Your ultimate destination for the latest in fashion and style.</p>
         </div>
       </div>
       <div className={styles.rightSection}>

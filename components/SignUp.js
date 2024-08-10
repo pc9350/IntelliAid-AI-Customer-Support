@@ -48,7 +48,7 @@ export default function SignUp() {
     <div className={styles.container}>
       <div className={styles.leftSection}>
         <div className={styles.welcomeText}>
-          <h1>Join IntelliAid</h1>
+          <h1>Join TrendyThreads</h1>
           <p>Create an account to get started</p>
         </div>
       </div>
