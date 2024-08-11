@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import styles from "./SignIn.module.scss";
 import { auth, googleProvider, db } from "../firebase";
 import {
@@ -31,6 +31,24 @@ export default function SignIn() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
+  const handleUserSignIn = useCallback(async (user) => {
+    try {
+      // Retrieve or create user info in Firestore
+      const userDocRef = doc(db, "users", user.uid);
+      const userDoc = await getDoc(userDocRef);
+      if (!userDoc.exists()) {
+        await setDoc(userDocRef, {
+          email: user.email,
+          createdAt: new Date(),
+          uid: user.uid,
+        });
+      }
+      router.push("/landingPage");
+    } catch (error) {
+      console.error("Error handling user sign in:", error);
+    }
+  }, [router]);
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -39,7 +57,7 @@ export default function SignIn() {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [handleUserSignIn]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -79,25 +97,6 @@ export default function SignIn() {
       // }
     } catch (error) {
       console.error("Error during Google sign in:", error);
-    }
-  };
-
-  const handleUserSignIn = async (user) => {
-    try {
-      // Retrieve or create user info in Firestore
-      const userDocRef = doc(db, "users", user.uid);
-      const userDoc = await getDoc(userDocRef);
-      if (!userDoc.exists()) {
-        // console.log("New user detected, creating user document...");
-        await setDoc(userDocRef, {
-          email: user.email,
-          createdAt: new Date(),
-          uid: user.uid,
-        });
-      } 
-      router.push("/landingPage");
-    } catch (error) {
-      console.error("Error handling user sign in:", error);
     }
   };
 
