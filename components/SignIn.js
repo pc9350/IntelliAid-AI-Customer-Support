@@ -68,7 +68,6 @@ export default function SignIn() {
 
   const handleGoogleSignIn = async () => {
     try {
-      console.log("Attempting Google sign-in...");
 
       // if (isMobile) {
       //   console.log("Redirecting to Google sign-in for mobile...");
@@ -118,7 +117,7 @@ export default function SignIn() {
     };
   
     handleAuthRedirect();
-  }, [isMobile]);
+  }, [isMobile, handleUserSignIn]);
 
   return (
     <div className={styles.container}>
