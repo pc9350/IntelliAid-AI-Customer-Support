@@ -11,12 +11,74 @@ import { useState, useRef, useEffect } from "react";
 import { styled } from "@mui/material/styles";
 import { db, auth } from "../firebase";
 import { collection, addDoc } from "firebase/firestore";
+import { signOut } from "firebase/auth";
+import { useRouter } from "next/router";
+import { keyframes } from "@emotion/react";
+import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 
 // Color variables
 const AIColor = "rgb(54, 74, 201)";
 const CustomerColor = "rgb(242, 242, 242)";
 const AITextColor = "white";
 const CustomerTextColor = "black";
+
+
+const pulseAnimation = keyframes`
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(255, 0, 0, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 0, 0, 0);
+  }
+`;
+
+const StyledSignOutButton = styled(Button)(({ theme }) => ({
+  position: 'absolute',
+  top: '20px',
+  right: '20px',
+  width: '100px',
+  height: '60px',
+  minWidth: 'unset',
+  padding: 0,
+  backgroundColor: theme.palette.error.main,
+  color: theme.palette.error.contrastText,
+  transition: 'all 0.3s ease',
+  overflow: 'hidden',
+  '&:hover': {
+    backgroundColor: theme.palette.error.dark,
+    transform: 'scale(1.1)',
+    animation: `${pulseAnimation} 1.5s infinite`,
+  },
+  '&::after': {
+    content: '"Sign Out"',
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    opacity: 0,
+    transition: 'opacity 0.3s ease',
+  },
+  '&:hover::after': {
+    opacity: 1,
+  },
+  '& .MuiSvgIcon-root': {
+    fontSize: '1.5rem',
+    transition: 'opacity 0.3s ease',
+  },
+  '&:hover .MuiSvgIcon-root': {
+    opacity: 0,
+  },
+  '@media (max-width: 600px)': {
+    width: '50px',
+    height: '50px',
+    top: '10px',
+    right: '10px',
+  },
+}));
+
 
 // Styled components
 const ChatBox = styled(Box)(({ theme }) => ({
@@ -129,6 +191,8 @@ export default function Home() {
   const [feedback, setFeedback] = useState("");
   const [feedbackRating, setFeedbackRating] = useState(null);
   const contentContainerRef = useRef(null);
+  const router = useRouter();
+
 
   const sendMessage = async () => {
     if (!message.trim() || isLoading) return;
@@ -238,6 +302,15 @@ export default function Home() {
     }
   }, [messages]);
 
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      router.push("/signin"); // Redirect to the sign-in page after signing out
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  };
+
   return (
     <Box
       width="100vw"
@@ -249,6 +322,9 @@ export default function Home() {
       bgcolor="background.default"
       padding={2}
     >
+      <StyledSignOutButton onClick={handleSignOut}>
+        <ExitToAppIcon />
+      </StyledSignOutButton>
       <ChatBox>
         <Header sx={{ p: 5 }}>TrendyThreads Support</Header>
         <ContentContainer
