@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import styles from "./SignIn.module.scss";
 import { auth, googleProvider, db } from "../firebase";
-import { signInWithPopup, signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithPopup, signInWithEmailAndPassword, signInWithRedirect, getRedirectResult, onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import GoogleIcon from "@mui/icons-material/Google";
 import Link from "next/link";
@@ -12,7 +12,6 @@ export default function SignIn() {
   const [password, setPassword] = useState("");
   const [isMobile, setIsMobile] = useState(false);
 
-
   const router = useRouter();
 
   useEffect(() => {
@@ -21,11 +20,48 @@ export default function SignIn() {
     };
 
     checkMobile();
-    window.addEventListener('resize', checkMobile);
+    window.addEventListener("resize", checkMobile);
 
-    return () => window.removeEventListener('resize', checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
+  useEffect(() => {
+    // Check if the user is already signed in
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // User is signed in, redirect to landing page
+        router.push("/landingPage");
+      } else {
+        // Handle the redirect result if this is a redirect-based sign-in
+        handleRedirectResult();
+      }
+    });
+    // Clean up the listener when the component unmounts
+    return () => unsubscribe();
+  }, [router]);
+
+    const handleRedirectResult = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result) {
+          const user = result.user;
+  
+          // Retrieve or create user info in Firestore
+          const userDocRef = doc(db, "users", user.uid);
+          const userDoc = await getDoc(userDocRef);
+          if (!userDoc.exists()) {
+            await setDoc(userDocRef, {
+              email: user.email,
+              createdAt: new Date(),
+              uid: user.uid,
+            });
+          }
+          router.push("/landingPage");
+        }
+      } catch (error) {
+        console.error("Error handling redirect result:", error);
+      }
+    };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -55,22 +91,25 @@ export default function SignIn() {
 
   const handleGoogleSignIn = async () => {
     try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const user = result.user;
+      if (isMobile) {
+        await signInWithRedirect(auth, googleProvider);
+      } else {
+        const result = await signInWithPopup(auth, googleProvider);
+        const user = result.user;
 
-      // Retrieve or create user info in Firestore
-      const userDocRef = doc(db, "users", user.uid);
-      const userDoc = await getDoc(userDocRef);
-      if (!userDoc.exists()) {
-        await setDoc(userDocRef, {
-          email: user.email,
-          createdAt: new Date(),
-          uid: user.uid,
-        });
+        // Retrieve or create user info in Firestore
+        const userDocRef = doc(db, "users", user.uid);
+        const userDoc = await getDoc(userDocRef);
+        if (!userDoc.exists()) {
+          await setDoc(userDocRef, {
+            email: user.email,
+            createdAt: new Date(),
+            uid: user.uid,
+          });
+        }
+
+        router.push("/landingPage");
       }
-
-      console.log("User signed in with Google:", user);
-      router.push("/landingPage");
     } catch (error) {
       console.error("Error during Google sign in:", error);
     }
