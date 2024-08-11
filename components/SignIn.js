@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from "react";
 import styles from "./SignIn.module.scss";
 import { auth, googleProvider, db } from "../firebase";
-import { signInWithPopup, signInWithEmailAndPassword, signInWithRedirect, getRedirectResult, onAuthStateChanged } from "firebase/auth";
+import {
+  signInWithPopup,
+  signInWithEmailAndPassword,
+  signInWithRedirect,
+  getRedirectResult,
+  onAuthStateChanged,
+} from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import GoogleIcon from "@mui/icons-material/Google";
 import Link from "next/link";
@@ -26,42 +32,14 @@ export default function SignIn() {
   }, []);
 
   useEffect(() => {
-    // Check if the user is already signed in
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        // User is signed in, redirect to landing page
-        router.push("/landingPage");
-      } else {
-        // Handle the redirect result if this is a redirect-based sign-in
-        handleRedirectResult();
+        await handleUserSignIn(user);
       }
     });
-    // Clean up the listener when the component unmounts
-    return () => unsubscribe();
-  }, [router]);
 
-    const handleRedirectResult = async () => {
-      try {
-        const result = await getRedirectResult(auth);
-        if (result) {
-          const user = result.user;
-  
-          // Retrieve or create user info in Firestore
-          const userDocRef = doc(db, "users", user.uid);
-          const userDoc = await getDoc(userDocRef);
-          if (!userDoc.exists()) {
-            await setDoc(userDocRef, {
-              email: user.email,
-              createdAt: new Date(),
-              uid: user.uid,
-            });
-          }
-          router.push("/landingPage");
-        }
-      } catch (error) {
-        console.error("Error handling redirect result:", error);
-      }
-    };
+    return () => unsubscribe();
+  }, []);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -76,10 +54,9 @@ export default function SignIn() {
       // Retrieve user info from Firestore
       const userDoc = await getDoc(doc(db, "users", user.uid));
       if (userDoc.exists()) {
+        // console.log("User exists in Firestore, redirecting to landing page...");
         router.push("/landingPage");
-      } else {
-        console.error("No such document!");
-      }
+      } 
     } catch (error) {
       if (error.code === "auth/invalid-credential") {
         alert("Invalid password. Please try again.");
@@ -91,29 +68,57 @@ export default function SignIn() {
 
   const handleGoogleSignIn = async () => {
     try {
-      if (isMobile) {
-        await signInWithRedirect(auth, googleProvider);
-      } else {
+      console.log("Attempting Google sign-in...");
+
+      // if (isMobile) {
+      //   console.log("Redirecting to Google sign-in for mobile...");
+      //   await signInWithRedirect(auth, googleProvider);
+      // } else {
         const result = await signInWithPopup(auth, googleProvider);
         const user = result.user;
-
-        // Retrieve or create user info in Firestore
-        const userDocRef = doc(db, "users", user.uid);
-        const userDoc = await getDoc(userDocRef);
-        if (!userDoc.exists()) {
-          await setDoc(userDocRef, {
-            email: user.email,
-            createdAt: new Date(),
-            uid: user.uid,
-          });
-        }
-
-        router.push("/landingPage");
-      }
+        await handleUserSignIn(user);
+      // }
     } catch (error) {
       console.error("Error during Google sign in:", error);
     }
   };
+
+  const handleUserSignIn = async (user) => {
+    try {
+      // Retrieve or create user info in Firestore
+      const userDocRef = doc(db, "users", user.uid);
+      const userDoc = await getDoc(userDocRef);
+      if (!userDoc.exists()) {
+        // console.log("New user detected, creating user document...");
+        await setDoc(userDocRef, {
+          email: user.email,
+          createdAt: new Date(),
+          uid: user.uid,
+        });
+      } 
+      router.push("/landingPage");
+    } catch (error) {
+      console.error("Error handling user sign in:", error);
+    }
+  };
+
+  useEffect(() => {
+    const handleAuthRedirect = async () => {
+      if (isMobile) {
+        try {
+          const result = await getRedirectResult(auth);
+          if (result) {
+            const user = result.user;
+            await handleUserSignIn(user);
+          }
+        } catch (error) {
+          console.error("Error handling redirect result:", error);
+        }
+      }
+    };
+  
+    handleAuthRedirect();
+  }, [isMobile]);
 
   return (
     <div className={styles.container}>
