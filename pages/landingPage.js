@@ -211,17 +211,17 @@ const StyledTextField = styled(TextField)(({ theme, isSelected }) => {
       boxShadow: theme.shadows[2],
       transition: "border-color 0.3s ease",
       "& input": {
-        color: "#000000", // Set the typing text color to black
+        color: "white", // Set the typing text color to black
       },
       "&:focus": {
-        borderColor: AIColor,
+        borderColor: "#FFFFFF",
       },
     },
     "& .MuiOutlinedInput-notchedOutline": {
       border: "none",
     },
     "& .MuiFormLabel-root.Mui-focused": {
-      color: AIColor,
+      color: "#FFFFFF",
     },
   };
 });
