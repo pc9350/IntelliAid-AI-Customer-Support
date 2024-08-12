@@ -15,67 +15,32 @@ import { signOut } from "firebase/auth";
 import { useRouter } from "next/router";
 import { keyframes } from "@emotion/react";
 import ExitToAppIcon from "@mui/icons-material/ExitToApp";
+import Background3D from "@/components/Background3D";
+import SendIcon from '@mui/icons-material/Send';
+import CloseIcon from '@mui/icons-material/Close';
 
 // Color variables
-const AIColor = "rgb(54, 74, 201)";
-const CustomerColor = "rgb(242, 242, 242)";
-const AITextColor = "white";
-const CustomerTextColor = "black";
+const AIColor = "rgba(52, 152, 219, 0.8)"; // Slightly transparent blue
+const CustomerColor = "rgba(200, 200, 200, 0.8)"; // Slightly transparent orange
+const AITextColor = "#FFFFFF";
+const CustomerTextColor = "#2D3436";
+const BackgroundColor = "rgba(236, 240, 241, 0.05)";
 
-const pulseAnimation = keyframes`
-  0% {
-    box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.4);
-  }
-  70% {
-    box-shadow: 0 0 0 10px rgba(255, 0, 0, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(255, 0, 0, 0);
-  }
-`;
-
-const fadeInBounce = keyframes`
-0% {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  50% {
-    opacity: 0.5;
-    transform: translateY(-10px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-`;
-
-const typingDots = keyframes`
-  0% {
-    opacity: 0.3;
-  }
-  50% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0.3;
-  }
+const typingAnimation = keyframes`
+  0%, 80%, 100% { transform: scale(0); }
+  40% { transform: scale(1); }
 `;
 
 const Dot = styled(Box)(({ theme }) => ({
   display: "inline-block",
   width: "8px",
   height: "8px",
-  margin: "0 2px",
-  backgroundColor: "#ff0000", // Ensure AITextColor is defined or replace with a color like "#ffffff"
+  margin: "0 4px",
+  backgroundColor: "white",
   borderRadius: "50%",
-  animation: `${typingDots} 1s infinite`,
-  "&:nth-of-type(2)": {
-    animationDelay: "0.2s",
-  },
-  "&:nth-of-type(3)": {
-    animationDelay: "0.4s",
-  },
+  animation: `${typingAnimation} 1.4s infinite ease-in-out both`,
+  "&:nth-of-type(1)": { animationDelay: "-0.32s" },
+  "&:nth-of-type(2)": { animationDelay: "-0.16s" },
 }));
 
 
@@ -87,70 +52,124 @@ const TypingIndicator = () => (
   </Box>
 );
 
-const StyledSignOutButton = styled(Button)(({ theme }) => ({
-  position: "absolute",
-  top: "20px",
-  right: "20px",
-  width: "100px",
-  height: "60px",
-  minWidth: "unset",
-  padding: 0,
-  backgroundColor: theme.palette.error.main,
-  color: theme.palette.error.contrastText,
-  transition: "all 0.3s ease",
-  overflow: "hidden",
-  "&:hover": {
-    backgroundColor: theme.palette.error.dark,
-    transform: "scale(1.1)",
-    animation: `${pulseAnimation} 1.5s infinite`,
+// const glowingBorder = keyframes`
+//   0% {
+//     box-shadow: 0 0 10px #FF416C, 0 0 20px #FF4B2B, 0 0 30px #FF416C, 0 0 40px #FF4B2B;
+//   }
+//   50% {
+//     box-shadow: 0 0 30px #FF416C, 0 0 40px #FF4B2B, 0 0 50px #FF416C, 0 0 60px #FF4B2B;
+//   }
+//   100% {
+//     box-shadow: 0 0 10px #FF416C, 0 0 20px #FF4B2B, 0 0 30px #FF416C, 0 0 40px #FF4B2B;
+//   }
+// `;
+
+const AnimatedButton = styled(Button)(({ theme, backgroundColor = '#3498db' }) => ({
+  borderRadius: '20px',
+  padding: '10px 20px',
+  color: '#FFFFFF',
+  backgroundColor: backgroundColor,
+  boxShadow: `0 3px 5px 2px rgba(0, 0, 0, 0.2)`,
+  transition: 'all 0.3s ease-in-out',
+  '&:hover': {
+    transform: 'translateY(-3px)',
+    boxShadow: `0 6px 10px 4px rgba(0, 0, 0, 0.3)`,
   },
-  "&::after": {
-    content: '"Sign Out"',
-    position: "absolute",
-    top: "50%",
-    left: "50%",
-    transform: "translate(-50%, -50%)",
-    opacity: 0,
-    transition: "opacity 0.3s ease",
-  },
-  "&:hover::after": {
-    opacity: 1,
-  },
-  "& .MuiSvgIcon-root": {
-    fontSize: "1.5rem",
-    transition: "opacity 0.3s ease",
-  },
-  "&:hover .MuiSvgIcon-root": {
-    opacity: 0,
-  },
-  "@media (max-width: 600px)": {
-    width: "50px",
-    height: "50px",
-    top: "10px",
-    right: "10px",
+  '&:active': {
+    transform: 'translateY(-1px)',
+    boxShadow: `0 4px 7px 3px rgba(0, 0, 0, 0.3)`,
   },
 }));
+
+const buttonStyles = {
+  height: '50px', // Set a fixed height for both buttons
+  padding: '10px 20px', // Ensure consistent padding
+  borderRadius: '20px', // Consistent border-radius for both
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+};
+
+const pulseAnimation = keyframes`
+  0% {
+    box-shadow: 0 0 0 0 rgba(52, 152, 219, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(52, 152, 219, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(52, 152, 219, 0);
+  }
+`;
+
+const SendButton = ({ onClick, disabled }) => (
+  <AnimatedButton
+    onClick={onClick}
+    disabled={disabled}
+    backgroundColor='#3498db' // Solid blue color
+    endIcon={<SendIcon />}
+    sx={{
+      ...buttonStyles,
+      animation: disabled ? 'none' : `${pulseAnimation} 2s infinite`,
+    }}
+  >
+    Send
+  </AnimatedButton>
+);
+
+const EndChatButton = ({ onClick }) => (
+  <AnimatedButton
+    onClick={onClick}
+    backgroundColor='#c0392b' // Solid red color
+    endIcon={<CloseIcon />}
+    sx={buttonStyles}
+  >
+    End Chat
+  </AnimatedButton>
+);
+
+const SignOutButton = ({ onClick }) => (
+  <AnimatedButton
+    onClick={onClick}
+    backgroundColor='#8e44ad'  // Solid purple color
+    sx={{
+      position: 'absolute',
+      top: '20px',
+      right: '20px',
+    }}
+  >
+    <p style={{paddingRight: "5px"}}>Sign Out</p>
+    <ExitToAppIcon />
+  </AnimatedButton>
+);
 
 // Styled components
 const ChatBox = styled(Box)(({ theme }) => ({
-  width: "90vw",
-  maxWidth: "500px",
-  height: "80vh",
-  maxHeight: "700px",
-  borderRadius: "25px",
-  border: `1px solid ${theme.palette.divider}`,
-  background: `linear-gradient(to top, ${theme.palette.background.default}, ${theme.palette.background.paper})`,
-  boxShadow: theme.shadows[5],
-  display: "flex",
-  flexDirection: "column",
+  width: '90vw',
+  maxWidth: '500px',
+  height: '80vh',
+  maxHeight: '700px',
+  borderRadius: '25px',
+  background: BackgroundColor,
+  backdropFilter: 'blur(10px)',
+  border: '1px solid rgba(255, 255, 255, 0.1)',
+  boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+  display: 'flex',
+  flexDirection: 'column',
+  overflow: 'hidden',
+  transition: 'all 0.3s ease-in-out',
+  '&:hover': {
+    transform: 'scale(1.02)',
+    boxShadow: '0 8px 32px 0 rgba(255, 255, 255, 0.1)',
+  },
 }));
 
 const Header = styled(Box)(({ theme }) => ({
-  backgroundColor: AIColor,
+  backgroundColor: "rgba(52, 152, 219, 0.9)", // Matching AIColor but more opaque
   color: AITextColor,
   fontSize: "2rem",
   padding: theme.spacing(4),
-  borderRadius: "25px 25px 0 0", // Rounded corners on top
+  borderRadius: "25px 25px 0 0",
   margin: 0,
   position: "sticky",
   top: 0,
@@ -165,27 +184,22 @@ const ContentContainer = styled(Stack)(({ theme }) => ({
   padding: theme.spacing(2),
 }));
 
+// const messageAnimation = keyframes`
+//   0% { opacity: 0; transform: translateY(20px) scale(0.9); }
+//   100% { opacity: 1; transform: translateY(0) scale(1); }
+// `;
+
 const MessageBox = styled(Box)(({ role }) => ({
   backgroundColor: role === "assistant" ? AIColor : CustomerColor,
   color: role === "assistant" ? AITextColor : CustomerTextColor,
   borderRadius: "16px",
   padding: "16px",
-  boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
-  animation: `${fadeInBounce} 0.5s ease-out`,
+  maxWidth: "80%",
+  alignSelf: role === "assistant" ? "flex-start" : "flex-end",
+  marginBottom: "10px",
+  boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
 }));
 
-const SendButton = styled(Button)(({ theme }) => ({
-  borderRadius: "16px",
-  backgroundColor: CustomerColor,
-  color: CustomerTextColor,
-  padding: theme.spacing(2),
-  boxShadow: theme.shadows[2],
-  "&:hover": {
-    backgroundColor: AIColor,
-    color: AITextColor,
-    boxShadow: theme.shadows[4],
-  },
-}));
 
 const StyledTextField = styled(TextField)(({ theme, isSelected }) => {
   const borderColor = isSelected ? CustomerColor : AIColor;
@@ -196,6 +210,9 @@ const StyledTextField = styled(TextField)(({ theme, isSelected }) => {
       border: `2px solid ${borderColor}`,
       boxShadow: theme.shadows[2],
       transition: "border-color 0.3s ease",
+      "& input": {
+        color: "#000000", // Set the typing text color to black
+      },
       "&:focus": {
         borderColor: AIColor,
       },
@@ -227,6 +244,20 @@ const FeedbackBox = styled(Box)(({ theme }) => ({
   width: "400px",
   textAlign: "center",
 }));
+
+const DarkBackground = styled(Box)(({ theme }) => ({
+  width: "100vw",
+  height: "100vh",
+  background: "linear-gradient(135deg, #1f1c2c, #928DAB)", // Dark purple to light purple gradient
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  padding: theme.spacing(2),
+  position: "relative", // Ensures particles stay within bounds
+  overflow: "hidden",
+}));
+
+
 
 export default function Home() {
   const [isTextFieldFocused, setIsTextFieldFocused] = useState(false);
@@ -362,19 +393,16 @@ export default function Home() {
   };
 
   return (
-    <Box
-      width="100vw"
-      height="100vh"
-      display="flex"
-      flexDirection="column"
-      justifyContent="center"
-      alignItems="center"
-      bgcolor="background.default"
-      padding={2}
-    >
-      <StyledSignOutButton onClick={handleSignOut}>
+    <DarkBackground>
+      {/* <Particle style={{ top: "10%", left: "20%" }} />
+  <Particle style={{ top: "50%", left: "60%" }} />
+  <Particle style={{ top: "80%", left: "30%" }} /> */}
+  <Background3D />
+
+      <SignOutButton onClick={handleSignOut} />
+      {/* <StyledSignOutButton onClick={handleSignOut}>
         <ExitToAppIcon />
-      </StyledSignOutButton>
+      </StyledSignOutButton> */}
       <ChatBox>
         <Header sx={{ p: 5 }}>TrendyThreads Support</Header>
         <ContentContainer
@@ -418,21 +446,8 @@ export default function Home() {
             onFocus={() => setIsTextFieldFocused(true)}
             onBlur={() => setIsTextFieldFocused(false)}
           />
-          <SendButton
-            variant="contained"
-            onClick={sendMessage}
-            disabled={isLoading}
-          >
-            {isLoading ? "Sending..." : "Send"}
-          </SendButton>
-          <Button
-            variant="contained"
-            onClick={handleEndChat}
-            color="error"
-            sx={{ marginLeft: "auto", borderRadius: "16px" }}
-          >
-            End Chat
-          </Button>
+          <SendButton onClick={sendMessage} disabled={isLoading} />
+          <EndChatButton onClick={handleEndChat} />
         </Stack>
       </ChatBox>
       <FeedbackModal
@@ -477,6 +492,6 @@ export default function Home() {
           </Button>
         </FeedbackBox>
       </FeedbackModal>
-    </Box>
+    </DarkBackground>
   );
 }

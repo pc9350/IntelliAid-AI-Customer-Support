@@ -33,9 +33,11 @@ export default function MobileLayout({ children }) {
 
   if (!isMobile) return children;
 
+  const isLandingPage = router.pathname === '/landingPage'; 
+
   return (
     <div className={styles.mobileContainer}>
-      {router.pathname !== '/mobile-landing' && (
+      {!isLandingPage && (
         <button className={styles.backButton} onClick={handleBack}>
           ← Back
         </button>
