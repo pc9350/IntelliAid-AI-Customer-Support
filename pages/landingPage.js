@@ -64,11 +64,11 @@ const TypingIndicator = () => (
 //   }
 // `;
 
-const AnimatedButton = styled(Button)(({ theme, backgroundColor = '#3498db' }) => ({
+const AnimatedButton = styled(Button)(({ theme, customcolor }) => ({
   borderRadius: '20px',
   padding: '10px 20px',
   color: '#FFFFFF',
-  backgroundColor: backgroundColor,
+  backgroundColor: customcolor || '#3498db', // Use customcolor to set the background
   boxShadow: `0 3px 5px 2px rgba(0, 0, 0, 0.2)`,
   transition: 'all 0.3s ease-in-out',
   '&:hover': {
@@ -106,12 +106,12 @@ const SendButton = ({ onClick, disabled }) => (
   <AnimatedButton
     onClick={onClick}
     disabled={disabled}
-    backgroundColor='#3498db' // Solid blue color
-    endIcon={<SendIcon />}
+    customcolor="#3498db" // Solid blue color
     sx={{
       ...buttonStyles,
       animation: disabled ? 'none' : `${pulseAnimation} 2s infinite`,
     }}
+    endIcon={<SendIcon />}
   >
     Send
   </AnimatedButton>
@@ -120,9 +120,9 @@ const SendButton = ({ onClick, disabled }) => (
 const EndChatButton = ({ onClick }) => (
   <AnimatedButton
     onClick={onClick}
-    backgroundColor='#c0392b' // Solid red color
-    endIcon={<CloseIcon />}
+    customcolor="#c0392b" // Solid red color
     sx={buttonStyles}
+    endIcon={<CloseIcon />}
   >
     End Chat
   </AnimatedButton>
@@ -131,14 +131,14 @@ const EndChatButton = ({ onClick }) => (
 const SignOutButton = ({ onClick }) => (
   <AnimatedButton
     onClick={onClick}
-    backgroundColor='#8e44ad'  // Solid purple color
+    customcolor="#8e44ad" // Solid purple color
     sx={{
       position: 'absolute',
       top: '20px',
       right: '20px',
     }}
   >
-    <p style={{paddingRight: "5px"}}>Sign Out</p>
+    <p style={{ paddingRight: '5px' }}>Sign Out</p>
     <ExitToAppIcon />
   </AnimatedButton>
 );

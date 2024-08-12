@@ -8,6 +8,8 @@ const Background3D = () => {
     let width = window.innerWidth;
     let height = window.innerHeight;
 
+    const currentMountRef = mountRef.current;
+
     // Scene, camera, renderer setup
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
@@ -91,14 +93,13 @@ const Background3D = () => {
 
     // Cleanup
     return () => {
-      window.removeEventListener("resize", handleResize);
-      document.removeEventListener("mousemove", onDocumentMouseMove);
-      if (mountRef.current && renderer.domElement) {
-        mountRef.current.removeChild(renderer.domElement);
-      }
-      renderer.dispose(); // Clean up the renderer
-    };
-  }, []);
+        window.removeEventListener("resize", handleResize);
+        document.removeEventListener("mousemove", onDocumentMouseMove);
+        if (currentMountRef) {
+          currentMountRef.removeChild(renderer.domElement);
+        }
+      };
+    }, []);
 
   // PURPLE GRADIENT
   //   const createGradientCanvas = () => {
