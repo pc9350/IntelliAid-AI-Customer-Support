@@ -278,51 +278,51 @@ export default function Home() {
 
   const sendMessage = async () => {
     if (!message.trim() || isLoading) return;
+    
+    const userMessage = { role: "user", content: message };
+  
+    setMessages((prevMessages) => [...prevMessages, userMessage]);
     setIsLoading(true);
-
-    const newMessages = [...messages, { role: "user", content: message }];
-    setMessages(newMessages);
-
+    setMessage("");
+  
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify([{ role: "user", content: message }]), // Send only the user message to the backend
+        body: JSON.stringify([...messages, userMessage]),
       });
-
+  
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
-
+  
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
-
       let assistantMessage = "";
+  
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
         assistantMessage += decoder.decode(value, { stream: true });
       }
-
-      setMessages((messages) => [
-        ...messages,
+  
+      setMessages((prevMessages) => [
+        ...prevMessages,
         { role: "assistant", content: assistantMessage },
       ]);
     } catch (error) {
       console.error("Error:", error);
-      setMessages((messages) => [
-        ...messages,
+      setMessages((prevMessages) => [
+        ...prevMessages,
         {
           role: "assistant",
-          content:
-            "I'm sorry, but I encountered an error. Please try again later.",
+          content: "I'm sorry, but I encountered an error. Please try again later.",
         },
       ]);
     }
-
-    setMessage("");
+  
     setIsLoading(false);
   };
 
