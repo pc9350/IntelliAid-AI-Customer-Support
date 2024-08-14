@@ -45,8 +45,8 @@ TrendyThreads Support Chatbot is an AI-driven customer support assistant, capabl
 2. **Install Dependencies:**
 
 
-   npm install
-   **or**
+   npm install<br>
+   **or**<br>
    yarn install
 
 3. **Set Up Enviromental Variables:**
@@ -68,8 +68,8 @@ TrendyThreads Support Chatbot is an AI-driven customer support assistant, capabl
 4. **Run the Application:**
 
 
-   npm run dev
-   **or**
+   npm run dev<br>
+   **or**<br>
    yarn dev
 
    Access the application at http://localhost:3000.
