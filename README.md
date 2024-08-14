@@ -1,36 +1,90 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# 🧵 TrendyThreads Support Chatbot
 
-## Getting Started
+Welcome to the **TrendyThreads Support Chatbot** project! This repository contains the code and resources for a state-of-the-art AI-powered customer support chatbot designed to streamline and enhance the user experience for TrendyThreads customers.
 
-First, run the development server:
+## 🌟 Project Overview
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+TrendyThreads Support Chatbot is an AI-driven customer support assistant, capable of handling a variety of customer queries with human-like interaction. Whether it’s tracking orders, answering product-related questions, or processing returns, this chatbot is designed to provide instant, 24/7 assistance to customers.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🚀 Features
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+### 1. **Real-Time AI Support**
+- **Dual AI Integration**: The chatbot integrates both OpenAI’s GPT-3 and AWS Bedrock API, offering flexibility to switch between the two based on specific requirements.
+- **Conversational Flow**: Built to understand and respond in natural language, providing users with an intuitive and seamless chat experience.
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+### 2. **Advanced Tech Stack**
+- **Frontend**: Developed with **React** and **Next.js**, the chatbot features a responsive and user-friendly interface.
+- **Backend**: The backend is powered by **Firebase**, offering real-time database updates and authentication.
+- **UI/UX**: Styled with **Material-UI** and **Three.js** for a visually appealing and interactive user experience.
+- **Deployment**: The chatbot is hosted on **AWS EC2**, ensuring reliability, scalability, and fast performance.
 
-## Learn More
+### 3. **Interactive & Responsive Design**
+- **3D Animated Background**: Utilizes **Three.js** for a dynamic, engaging background that enhances user interaction.
+- **Mobile Optimization**: Fully responsive design ensures smooth operation across all device types, from desktops to mobile phones.
 
-To learn more about Next.js, take a look at the following resources:
+### 4. **Future Enhancements**
+- **RAG (Retrieval-Augmented Generation)**: Plans to implement RAG for contextually relevant responses based on the user’s knowledge base.
+- **LLM Orchestration**: Development of an LLM orchestration pattern with a router and task-specific models to optimize task handling.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🔧 Installation
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+### Prerequisites
+- **Node.js** (v14 or later)
+- **npm** or **yarn**
+- **Firebase** account
+- **AWS EC2** instance
 
-## Deploy on Vercel
+### Steps to Run Locally
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. **Clone the Repository:**
+   git clone https://github.com/pc9350/IntelliAid-AI-Customer-Support.git
+   cd TrendyThreads-Chatbot
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+2. **Install Dependencies:**
+   npm install
+   # or
+   yarn install
+
+3. **Set Up Enviromental Variables:**
+   NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
+   NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_firebase_project_auth_domain
+   NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_firebase_project_id
+   NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_firebase_project_storage_bucket
+   NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_firebase_project_messaging_sender_id
+   NEXT_PUBLIC_FIREBASE_APP_ID=your_firebase_project_app_id
+   NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=your_firebase_project_measurement_id
+   NEXT_PUBLIC_OPENAI_API_KEY=your_openai_api_key
+   NEXT_PUBLIC_AWS_BEDROCK_API_KEY=your_aws_key
+   NEXT_PUBLIC_AWS_BEDROCK_API_SECRET_KEY=your_aws_secret_key
+   AWS_REGION=your_assigned_region
+   USE_BEDROCK=true/false
+
+4. **Run the Application:**
+   npm run dev
+   # or
+   yarn dev
+
+   Access the application at http://localhost:3000.
+   
+5. **Deploy on AWS EC2:**
+   Follow the standard deployment process for Next.js applications on AWS EC2. Make sure to configure your server to serve the application on port 3000.
+
+### 🌐 Live Demo
+
+Experience the chatbot live: [TrendyThreads Chatbot Demo](http://ec2-3-92-47-86.compute-1.amazonaws.com/)
+
+### 📹 Project Video
+
+Check out our [3-minute video presentation](https://youtu.be/X4ARZE1sL_M) that walks you through the features, design, and technology behind the TrendyThreads Support Chatbot.
+
+### 🎯 Future Plans
+
+Given more time, the next steps for this project include:
+
+- **RAG Implementation**: Integrating Retrieval-Augmented Generation to provide responses tailored to a user’s specific knowledge base.
+- **LLM Orchestration**: Creating a robust LLM orchestration pattern that includes a router and task-specific models, optimizing the chatbot’s efficiency and accuracy.
+
+### 👥 Team & Collaboration
+
+This project was a collaborative effort, blending the technical expertise and creativity of the team. Working together was not only productive but also a truly exciting experience as we tackled challenges and innovated solutions.
+   
