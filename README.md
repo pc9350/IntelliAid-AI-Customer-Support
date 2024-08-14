@@ -37,15 +37,21 @@ TrendyThreads Support Chatbot is an AI-driven customer support assistant, capabl
 ### Steps to Run Locally
 
 1. **Clone the Repository:**
+
+
    git clone https://github.com/pc9350/IntelliAid-AI-Customer-Support.git
    cd TrendyThreads-Chatbot
 
 2. **Install Dependencies:**
+
+
    npm install
-   # or
+   **or**
    yarn install
 
 3. **Set Up Enviromental Variables:**
+
+
    NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_firebase_project_auth_domain
    NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_firebase_project_id
@@ -60,13 +66,17 @@ TrendyThreads Support Chatbot is an AI-driven customer support assistant, capabl
    USE_BEDROCK=true/false
 
 4. **Run the Application:**
+
+
    npm run dev
-   # or
+   **or**
    yarn dev
 
    Access the application at http://localhost:3000.
-   
+
 5. **Deploy on AWS EC2:**
+
+
    Follow the standard deployment process for Next.js applications on AWS EC2. Make sure to configure your server to serve the application on port 3000.
 
 ### 🌐 Live Demo
@@ -86,5 +96,5 @@ Given more time, the next steps for this project include:
 
 ### 👥 Team & Collaboration
 
-This project was a collaborative effort, blending the technical expertise and creativity of the team. Working together was not only productive but also a truly exciting experience as we tackled challenges and innovated solutions.
+This project was a collaborative effort, blending the technical expertise and creativity of the team. Special thanks to **[@isha038](https://github.com/isha038)** for their valuable contributions. Working together was not only productive but also a truly exciting experience as we tackled challenges and innovated solutions.
    
