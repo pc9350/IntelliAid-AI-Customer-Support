@@ -1,17 +1,110 @@
-import chatOpenAI from './chatOpenAI';
-import chatAWS from './chatAWS';
+import { parse } from 'cookie';
 
-const handler = async (req, res) => {
-  const useBedrock = process.env.USE_BEDROCK === 'true';
-
-  if (useBedrock) {
-    await chatAWS(req, res);
-  } else {
-    await chatOpenAI(req, res);
+// Helper function to get a valid base URL for API calls
+const getBaseUrl = (req) => {
+  // First try the environment variable
+  if (process.env.NEXT_PUBLIC_BASE_URL) {
+    return process.env.NEXT_PUBLIC_BASE_URL;
   }
+  
+  // Then try the request origin
+  if (req.headers && req.headers.origin) {
+    return req.headers.origin;
+  }
+  
+  // Fallback to localhost if in development
+  if (process.env.NODE_ENV === 'development') {
+    return 'http://localhost:3000';
+  }
+  
+  // Absolute fallback
+  return '';
 };
 
-export default handler;
+// This is a router API that will forward the request to either OpenAI or AWS Bedrock
+// based on the user's preference stored in a cookie
+export default async function handler(req, res) {
+  try {
+    // Parse cookies to check for model preference
+    const cookies = parse(req.headers.cookie || '');
+    const isUsingBedrock = cookies.modelPreference === 'bedrock';
+    
+    // Forward the request to the appropriate API handler
+    const targetEndpoint = isUsingBedrock ? '/api/chatAWS' : '/api/chatOpenAI';
+    
+    // Forward the request to the correct endpoint
+    const baseUrl = getBaseUrl(req);
+    const response = await fetch(`${baseUrl}${targetEndpoint}`, {
+      method: req.method,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cookie': req.headers.cookie || ''  // Forward cookies to maintain conversation history
+      },
+      body: JSON.stringify(req.body)
+    });
+
+    // Check if the response was successful
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Error from ${targetEndpoint}: ${response.status} ${response.statusText}`, errorText);
+      return res.status(response.status).json({ 
+        error: `Error from AI provider`, 
+        details: errorText,
+        provider: isUsingBedrock ? 'AWS Bedrock' : 'OpenAI'
+      });
+    }
+
+    // Check if we need to stream the response (OpenAI)
+    if (!isUsingBedrock) {
+      // OpenAI's chatOpenAI handler uses streaming, so we need to stream the response
+      res.writeHead(200, {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Transfer-Encoding': 'chunked',
+      });
+
+      // Stream the response back to the client
+      if (response.body) {
+        const reader = response.body.getReader();
+        
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          res.write(value);
+        }
+      }
+      
+      res.end();
+    } else {
+      // For AWS Bedrock, it's a regular JSON response
+      try {
+        const contentType = response.headers.get('Content-Type') || '';
+        const data = await response.text();
+        
+        // Set the appropriate content type header for the response
+        if (contentType) {
+          res.setHeader('Content-Type', contentType);
+        }
+        
+        // Forward the response status and data
+        res.status(response.status).send(data);
+      } catch (error) {
+        console.error('Error processing AWS Bedrock response:', error);
+        res.status(500).json({ 
+          error: 'Error processing AI response', 
+          details: error.message,
+          provider: 'AWS Bedrock'
+        });
+      }
+    }
+  } catch (error) {
+    console.error('Chat Router Error:', error);
+    res.status(500).json({ 
+      error: 'Internal Server Error', 
+      details: error.message,
+      trace: error.stack
+    });
+  }
+}
 
 // import OpenAI from "openai";
 

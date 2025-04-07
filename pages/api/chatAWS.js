@@ -5,6 +5,27 @@ const client = new BedrockRuntimeClient({
   region: "us-east-1",
 });
 
+// Helper function to get a valid base URL for API calls
+const getBaseUrl = (req) => {
+  // First try the environment variable
+  if (process.env.NEXT_PUBLIC_BASE_URL) {
+    return process.env.NEXT_PUBLIC_BASE_URL;
+  }
+  
+  // Then try the request origin
+  if (req.headers && req.headers.origin) {
+    return req.headers.origin;
+  }
+  
+  // Fallback to localhost if in development
+  if (process.env.NODE_ENV === 'development') {
+    return 'http://localhost:3000';
+  }
+  
+  // Absolute fallback
+  return '';
+};
+
 const systemPrompt = `You are a customer support chatbot named OuiOui for TrendyThreads, a leading fast-fashion retail company known for its stylish and affordable clothing, accessories, and footwear. Your role is to assist customers with their inquiries in a friendly, professional, and efficient manner. You are knowledgeable about our products, services, policies, and promotions.
 
 ## Specific Capabilities
@@ -15,13 +36,17 @@ const systemPrompt = `You are a customer support chatbot named OuiOui for Trendy
 5. Shipping Information: You can explain shipping options, costs and timeframes.
 6. Account assistance: You can help users with login issues or account-related questions.
 
-## Response Guidelines
+## CRITICAL RESPONSE GUIDELINES
 - Be friendly, professional, and personable in your responses.
-- If a user asks about specific product information, orders, or other data that might require retrieving information from our database, ALWAYS check if the provided information is valid before giving specific details.
+- NEVER describe your tone or emotions in your messages. DO NOT write phrases like "*in a friendly tone*" or "*smiling*".
+- DO NOT use formatting indicators like asterisks, markdown syntax, or special characters.
+- DO NOT start your responses with descriptions of how you're responding.
+- Respond directly with the content the user needs in a natural, conversational way.
+- If a user asks about specific product information, orders, or other data that might require retrieving information from our database, always check if the provided information is valid before giving specific details.
 - For order tracking, explain that you need a valid order number in the format TT-2023-XXXXX.
 - For products, you can recommend items from our current catalog if the customer is looking for suggestions.
 - If you don't know the answer or need more information, politely ask for clarification.
-- Keep responses concise while being helpful and thorough.
+- Keep responses concise, direct and conversational while being helpful and thorough.
 
 ## Sample Dialog Patterns
 Customer: "I'd like to know about women's dresses"
@@ -81,7 +106,8 @@ const handler = async (req, res) => {
           
       try {
         // Fetch product data
-        const productResponse = await fetch(`${req.headers.origin}/api/productCatalog?type=featured`);
+        const baseUrl = getBaseUrl(req);
+        const productResponse = await fetch(`${baseUrl}/api/productCatalog?type=featured`);
         
         if (productResponse.ok) {
           const productData = await productResponse.json();
@@ -106,9 +132,10 @@ const handler = async (req, res) => {
         orderIdMatch) {
           
       try {
+        const baseUrl = getBaseUrl(req);
         // If we have an order ID in the message, fetch that specific order
         if (orderIdMatch) {
-          const orderResponse = await fetch(`${req.headers.origin}/api/orderTracking?orderId=${orderIdMatch[0]}`);
+          const orderResponse = await fetch(`${baseUrl}/api/orderTracking?orderId=${orderIdMatch[0]}`);
           
           if (orderResponse.ok) {
             const orderData = await orderResponse.json();
@@ -121,7 +148,7 @@ const handler = async (req, res) => {
           }
         } else {
           // Just a general order query, provide example order numbers they could use
-          const ordersResponse = await fetch(`${req.headers.origin}/api/orderTracking`);
+          const ordersResponse = await fetch(`${baseUrl}/api/orderTracking`);
           
           if (ordersResponse.ok) {
             const ordersData = await ordersResponse.json();
@@ -146,7 +173,8 @@ const handler = async (req, res) => {
         latestMessage.includes('policy')) {
           
       try {
-        const policiesResponse = await fetch(`${req.headers.origin}/api/productCatalog?type=policies`);
+        const baseUrl = getBaseUrl(req);
+        const policiesResponse = await fetch(`${baseUrl}/api/productCatalog?type=policies`);
         
         if (policiesResponse.ok) {
           const policiesData = await policiesResponse.json();
@@ -167,7 +195,8 @@ const handler = async (req, res) => {
         latestMessage.includes('open')) {
           
       try {
-        const locationsResponse = await fetch(`${req.headers.origin}/api/productCatalog?type=locations`);
+        const baseUrl = getBaseUrl(req);
+        const locationsResponse = await fetch(`${baseUrl}/api/productCatalog?type=locations`);
         
         if (locationsResponse.ok) {
           const locationsData = await locationsResponse.json();
@@ -193,13 +222,46 @@ const handler = async (req, res) => {
       `${msg.role.toUpperCase()}: ${msg.content}`
     ).join('\n\n');
 
-    // Create messages for AWS Bedrock
-    const messages = [
-      { 
-        role: 'user', 
-        content: `${combinedSystemPrompt}\n\nConversation history:\n${historyText}\n\nPlease respond to the latest user message.` 
+    // Create messages for AWS Bedrock - simplified format to ensure compatibility
+    const messages = [];
+    
+    // If we have a conversation history with at least one user message
+    if (conversationHistory.length > 0) {
+      // For the first message, combine system prompt with user's first message
+      if (conversationHistory[0].role === 'user') {
+        messages.push({
+          role: 'user',
+          content: `${combinedSystemPrompt}\n\n${conversationHistory[0].content}`
+        });
+      } else {
+        // If somehow the first message is not from user, add system prompt first
+        messages.push({
+          role: 'user',
+          content: combinedSystemPrompt
+        });
+        
+        // Then add the first message
+        messages.push({
+          role: conversationHistory[0].role === 'system' ? 'assistant' : conversationHistory[0].role,
+          content: conversationHistory[0].content
+        });
       }
-    ];
+      
+      // Add the rest of the conversation history (skip the first one)
+      for (let i = 1; i < conversationHistory.length; i++) {
+        const msg = conversationHistory[i];
+        messages.push({
+          role: msg.role === 'system' ? 'user' : msg.role, // Convert any 'system' role to 'user'
+          content: msg.content
+        });
+      }
+    } else {
+      // If there's no conversation history, just add the system prompt
+      messages.push({
+        role: 'user',
+        content: combinedSystemPrompt
+      });
+    }
 
     const params = {
       modelId: "anthropic.claude-3-sonnet-20240229-v1:0",
@@ -207,45 +269,89 @@ const handler = async (req, res) => {
         anthropic_version: "bedrock-2023-05-31",
         max_tokens: 1000,
         messages: messages,
+        temperature: 0.7,
+        top_p: 0.9,
       }),
       contentType: "application/json",
       accept: "application/json",
     };
 
     const command = new InvokeModelCommand(params);
-    const response = await client.send(command);
-
-    const responseBodyString = Buffer.from(response.body).toString('utf-8');
-    const responseBody = JSON.parse(responseBodyString);
-
-    // Extract assistant's message content
-    let assistantMessage = "No response from assistant.";
-    if (responseBody.content && responseBody.content.length > 0) {
-      assistantMessage = responseBody.content.map(item => item.text).join(" ");
-    }
-
-    // Add the assistant's response to conversation history
-    conversationHistory.push({ role: 'assistant', content: assistantMessage });
     
-    // Update the conversation history cookie
-    const serializedHistory = serialize(
-      'awsConversationHistory',
-      encodeURIComponent(JSON.stringify(conversationHistory)),
-      {
-        maxAge: 60 * 60 * 24, // 24 hours
-        path: '/',
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+    try {
+      const response = await client.send(command);
+      
+      const responseBodyString = Buffer.from(response.body).toString('utf-8');
+      const responseBody = JSON.parse(responseBodyString);
+
+      // Extract assistant's message content
+      let assistantMessage = "No response from assistant.";
+      
+      if (responseBody.content && responseBody.content.length > 0) {
+        // Extract just the text content without any formatting instructions
+        assistantMessage = responseBody.content
+          .filter(item => item.type === 'text')
+          .map(item => item.text)
+          .join(" ");
+        
+        // Clean up the response by removing any formatting markers that might remain
+        assistantMessage = cleanResponse(assistantMessage);
+      } else if (responseBody.stop_reason === 'end_turn') {
+        // Handle cases where content is structured differently
+        if (responseBody.message && responseBody.message.content) {
+          assistantMessage = cleanResponse(responseBody.message.content);
+        } else if (responseBody.completion) {
+          assistantMessage = cleanResponse(responseBody.completion);
+        }
       }
-    );
-    
-    res.setHeader('Set-Cookie', serializedHistory);
-    res.status(200).send(assistantMessage);
+
+      // Add the assistant's response to conversation history
+      conversationHistory.push({ role: 'assistant', content: assistantMessage });
+      
+      // Update the conversation history cookie
+      const serializedHistory = serialize(
+        'awsConversationHistory',
+        encodeURIComponent(JSON.stringify(conversationHistory)),
+        {
+          maxAge: 60 * 60 * 24, // 24 hours
+          path: '/',
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'strict',
+        }
+      );
+      
+      res.setHeader('Set-Cookie', serializedHistory);
+      res.status(200).send(assistantMessage);
+    } catch (error) {
+      console.error("AWS Bedrock Error:", error);
+      
+      // Send a more detailed error response
+      res.status(500).json({ 
+        error: "AWS Bedrock Error", 
+        message: error.message,
+        code: error.$metadata?.httpStatusCode || 500,
+        requestId: error.$metadata?.requestId || 'unknown'
+      });
+    }
   } catch (error) {
-    console.error("AWS Bedrock Error:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    console.error("ChatAWS Handler Error:", error);
+    res.status(500).json({ error: "Internal Server Error", message: error.message });
   }
+};
+
+// Helper function to clean response text
+const cleanResponse = (text) => {
+  return text
+    .replace(/\*\*([^*]+)\*\*/g, '$1') // Remove bold markers
+    .replace(/\*([^*]+)\*/g, '$1')     // Remove italic markers
+    .replace(/```[^`]*```/g, '')       // Remove code blocks
+    .replace(/`([^`]+)`/g, '$1')       // Remove inline code
+    .replace(/\[(.*?)\]\(.*?\)/g, '$1') // Remove markdown links but keep text
+    .replace(/^\s*-\s+/gm, '• ')       // Replace list dashes with bullets for better readability
+    .replace(/\*in a.*?\*/g, '')       // Remove tone indicators like "*in a friendly tone*"
+    .replace(/\*smiling\*/g, '')       // Remove emotion indicators
+    .trim();
 };
 
 export default handler;

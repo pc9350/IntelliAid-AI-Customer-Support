@@ -1,6 +1,27 @@
 import OpenAI from "openai";
 import { parse, serialize } from "cookie";
 
+// Helper function to get a valid base URL for API calls
+const getBaseUrl = (req) => {
+  // First try the environment variable
+  if (process.env.NEXT_PUBLIC_BASE_URL) {
+    return process.env.NEXT_PUBLIC_BASE_URL;
+  }
+  
+  // Then try the request origin
+  if (req.headers && req.headers.origin) {
+    return req.headers.origin;
+  }
+  
+  // Fallback to localhost if in development
+  if (process.env.NODE_ENV === 'development') {
+    return 'http://localhost:3000';
+  }
+  
+  // Absolute fallback
+  return '';
+};
+
 const systemPrompt = `You are a customer support chatbot called OuiOui for TrendyThreads, a leading fast-fashion retail company known for its stylish and affordable clothing, accessories, and footwear. Your role is to assist customers with their inquiries in a friendly, professional, and efficient manner. You are knowledgeable about our products, services, policies, and promotions.
 
 ## Specific Capabilities
@@ -74,7 +95,7 @@ const chatOpenAI = async (req, res) => {
           
       try {
         // Fetch product data
-        const productResponse = await fetch(`${req.headers.origin}/api/productCatalog?type=featured`);
+        const productResponse = await fetch(`${getBaseUrl(req)}/api/productCatalog?type=featured`);
         
         if (productResponse.ok) {
           const productData = await productResponse.json();
@@ -104,7 +125,7 @@ const chatOpenAI = async (req, res) => {
       try {
         // If we have an order ID in the message, fetch that specific order
         if (orderIdMatch) {
-          const orderResponse = await fetch(`${req.headers.origin}/api/orderTracking?orderId=${orderIdMatch[0]}`);
+          const orderResponse = await fetch(`${getBaseUrl(req)}/api/orderTracking?orderId=${orderIdMatch[0]}`);
           
           if (orderResponse.ok) {
             const orderData = await orderResponse.json();
@@ -123,7 +144,7 @@ const chatOpenAI = async (req, res) => {
           }
         } else {
           // Just a general order query, provide example order numbers they could use
-          const ordersResponse = await fetch(`${req.headers.origin}/api/orderTracking`);
+          const ordersResponse = await fetch(`${getBaseUrl(req)}/api/orderTracking`);
           
           if (ordersResponse.ok) {
             const ordersData = await ordersResponse.json();
@@ -151,7 +172,7 @@ const chatOpenAI = async (req, res) => {
         latestMessage.includes('policy')) {
           
       try {
-        const policiesResponse = await fetch(`${req.headers.origin}/api/productCatalog?type=policies`);
+        const policiesResponse = await fetch(`${getBaseUrl(req)}/api/productCatalog?type=policies`);
         
         if (policiesResponse.ok) {
           const policiesData = await policiesResponse.json();
@@ -175,7 +196,7 @@ const chatOpenAI = async (req, res) => {
         latestMessage.includes('open')) {
           
       try {
-        const locationsResponse = await fetch(`${req.headers.origin}/api/productCatalog?type=locations`);
+        const locationsResponse = await fetch(`${getBaseUrl(req)}/api/productCatalog?type=locations`);
         
         if (locationsResponse.ok) {
           const locationsData = await locationsResponse.json();

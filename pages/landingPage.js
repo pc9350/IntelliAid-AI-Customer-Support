@@ -19,6 +19,8 @@ import Background3D from "@/components/Background3D";
 import SendIcon from '@mui/icons-material/Send';
 import CloseIcon from '@mui/icons-material/Close';
 import ProductCard from '@/components/ProductCard';
+import AIModelToggle from '@/components/AIModelToggle';
+import Cookies from 'js-cookie';
 
 // Color variables
 const AIColor = "rgba(52, 152, 219, 0.8)"; // Slightly transparent blue
@@ -278,6 +280,92 @@ export default function Home() {
   const router = useRouter();
   const [productResults, setProductResults] = useState([]);
   const [isSearchingProducts, setIsSearchingProducts] = useState(false);
+  const [isUsingBedrock, setIsUsingBedrock] = useState(false);
+  const [isSwitchingModel, setIsSwitchingModel] = useState(false);
+
+  // Check for model preference cookie on initial load
+  useEffect(() => {
+    const modelPreference = Cookies.get('modelPreference');
+    setIsUsingBedrock(modelPreference === 'bedrock');
+    
+    // Test connectivity to both models
+    testModelConnections();
+  }, []);
+  
+  // Function to test connectivity to both models
+  const testModelConnections = async () => {
+    try {
+      const response = await fetch('/api/testConnection');
+      
+      if (response.ok) {
+        const data = await response.json();
+        
+        // If the preferred model is not available, switch to the other one
+        const modelPreference = Cookies.get('modelPreference');
+        if (modelPreference === 'bedrock' && !data.bedrock.available) {
+          console.warn('AWS Bedrock is not available. Switching to OpenAI.');
+          Cookies.set('modelPreference', 'openai', { expires: 7, path: '/' });
+          setIsUsingBedrock(false);
+        } else if (modelPreference !== 'bedrock' && !data.openai.available) {
+          console.warn('OpenAI is not available. Switching to AWS Bedrock.');
+          Cookies.set('modelPreference', 'bedrock', { expires: 7, path: '/' });
+          setIsUsingBedrock(true);
+        }
+      }
+    } catch (error) {
+      console.error('Error testing model connections:', error);
+    }
+  };
+
+  // Function to toggle between AI models
+  const handleModelToggle = () => {
+    // Prevent multiple toggles while switching
+    if (isSwitchingModel) return;
+    
+    // Show switching indicator
+    setIsSwitchingModel(true);
+    
+    const newModelPreference = !isUsingBedrock ? 'bedrock' : 'openai';
+    
+    // Update cookie
+    Cookies.set('modelPreference', newModelPreference, { 
+      expires: 7, // Cookie expires in 7 days
+      path: '/'
+    });
+    
+    // Clear conversation history cookies to start fresh with the new model
+    // This is important to prevent mixing contexts between different models
+    try {
+      document.cookie = "conversationHistory=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      document.cookie = "awsConversationHistory=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    } catch (error) {
+      console.error('Error clearing cookies:', error);
+    }
+    
+    // Update state with a slight delay to show the transition
+    setTimeout(() => {
+      try {
+        const nextModel = !isUsingBedrock;
+        setIsUsingBedrock(nextModel);
+        
+        // Reset messages
+        setMessages([
+          {
+            role: "assistant",
+            content: `Hi! I'm the TrendyThreads support assistant (now using ${nextModel ? 'AWS Bedrock' : 'OpenAI'}). How can I help you today?`,
+          },
+        ]);
+        
+        // Clear product results when switching models
+        setProductResults([]);
+      } catch (error) {
+        console.error('Error during model switching:', error);
+      } finally {
+        // Always hide switching indicator, even if there was an error
+        setIsSwitchingModel(false);
+      }
+    }, 1500); // Slightly longer transition for better visibility
+  };
 
   // Function to search for products
   const searchProducts = async (keyword) => {
@@ -484,8 +572,33 @@ export default function Home() {
       {/* <StyledSignOutButton onClick={handleSignOut}>
         <ExitToAppIcon />
       </StyledSignOutButton> */}
+      <AIModelToggle 
+        isUsingBedrock={isUsingBedrock} 
+        onToggle={handleModelToggle} 
+        isSwitching={isSwitchingModel}
+      />
       <ChatBox>
-        <Header sx={{ p: 5 }}>TrendyThreads Support</Header>
+        <Header sx={{ p: 5 }}>
+          TrendyThreads Support
+          {!isSwitchingModel ? (
+            <>
+              {isUsingBedrock && (
+                <Typography variant="caption" display="block" sx={{ mt: 1, fontSize: '0.8rem' }}>
+                  Powered by AWS Bedrock
+                </Typography>
+              )}
+              {!isUsingBedrock && (
+                <Typography variant="caption" display="block" sx={{ mt: 1, fontSize: '0.8rem' }}>
+                  Powered by OpenAI
+                </Typography>
+              )}
+            </>
+          ) : (
+            <Typography variant="caption" display="block" sx={{ mt: 1, fontSize: '0.8rem', fontStyle: 'italic' }}>
+              Switching AI models... please wait
+            </Typography>
+          )}
+        </Header>
         <ContentContainer
           direction="column"
           spacing={2}
