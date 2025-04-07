@@ -18,6 +18,7 @@ import ExitToAppIcon from "@mui/icons-material/ExitToApp";
 import Background3D from "@/components/Background3D";
 import SendIcon from '@mui/icons-material/Send';
 import CloseIcon from '@mui/icons-material/Close';
+import ProductCard from '@/components/ProductCard';
 
 // Color variables
 const AIColor = "rgba(52, 152, 219, 0.8)"; // Slightly transparent blue
@@ -275,13 +276,57 @@ export default function Home() {
   const [feedbackRating, setFeedbackRating] = useState(null);
   const contentContainerRef = useRef(null);
   const router = useRouter();
+  const [productResults, setProductResults] = useState([]);
+  const [isSearchingProducts, setIsSearchingProducts] = useState(false);
+
+  // Function to search for products
+  const searchProducts = async (keyword) => {
+    if (!keyword) return;
+    
+    setIsSearchingProducts(true);
+    try {
+      const response = await fetch(`/api/productDetails?keyword=${encodeURIComponent(keyword)}`);
+      if (response.ok) {
+        const data = await response.json();
+        setProductResults(data.results || []);
+      }
+    } catch (error) {
+      console.error('Error searching products:', error);
+    } finally {
+      setIsSearchingProducts(false);
+    }
+  };
 
   const sendMessage = async () => {
     if (!message.trim() || isLoading) return;
     setIsLoading(true);
 
-    const newMessages = [...messages, { role: "user", content: message }];
+    const userMessage = { role: "user", content: message.trim() };
+    const newMessages = [...messages, userMessage];
     setMessages(newMessages);
+    setMessage("");
+
+    // Check if this message might be about products
+    const productKeywords = ['dress', 'shirt', 'jeans', 'jacket', 'sweater', 'leggings', 'product'];
+    const shouldSearchProducts = productKeywords.some(keyword => 
+      message.toLowerCase().includes(keyword)
+    );
+
+    if (shouldSearchProducts) {
+      // Extract potential product keywords
+      const messageWords = message.toLowerCase().split(/\s+/);
+      const potentialProductKeywords = productKeywords.filter(keyword => 
+        message.toLowerCase().includes(keyword)
+      );
+      
+      if (potentialProductKeywords.length > 0) {
+        // Use the first matching keyword for search
+        searchProducts(potentialProductKeywords[0]);
+      }
+    } else {
+      // Clear any previous product results if this isn't a product query
+      setProductResults([]);
+    }
 
     try {
       const response = await fetch("/api/chat", {
@@ -289,11 +334,15 @@ export default function Home() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify([{ role: "user", content: message }]), // Send only the user message to the backend
+        body: JSON.stringify([userMessage]),
       });
 
       if (!response.ok) {
-        throw new Error("Network response was not ok");
+        throw new Error(`Network response error: ${response.status}`);
+      }
+
+      if (!response.body) {
+        throw new Error("Response body stream not available");
       }
 
       const reader = response.body.getReader();
@@ -303,27 +352,36 @@ export default function Home() {
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        assistantMessage += decoder.decode(value, { stream: true });
+        
+        const text = decoder.decode(value, { stream: true });
+        assistantMessage += text;
+        
+        // Update messages with partial response for real-time display
+        setMessages(currentMessages => {
+          const messagesWithoutLastAssistant = currentMessages.filter(
+            (msg, i) => !(msg.role === "assistant" && i === currentMessages.length - 1)
+          );
+          
+          return [
+            ...messagesWithoutLastAssistant,
+            { role: "assistant", content: assistantMessage }
+          ];
+        });
       }
 
-      setMessages((messages) => [
-        ...messages,
-        { role: "assistant", content: assistantMessage },
-      ]);
     } catch (error) {
       console.error("Error:", error);
-      setMessages((messages) => [
-        ...messages,
+      setMessages(currentMessages => [
+        ...currentMessages,
         {
           role: "assistant",
           content:
             "I'm sorry, but I encountered an error. Please try again later.",
         },
       ]);
+    } finally {
+      setIsLoading(false);
     }
-
-    setMessage("");
-    setIsLoading(false);
   };
 
   const handleKeyPress = (event) => {
@@ -352,10 +410,15 @@ export default function Home() {
         feedback: feedback,
         rating: feedbackRating,
         timestamp: new Date(),
+        chatHistory: messages, // Save the entire chat history for analysis
       };
 
       // Save feedback to Firestore
       const docRef = await addDoc(collection(db, "feedback"), feedbackData);
+
+      // Clear cookies to reset conversation history
+      document.cookie = "conversationHistory=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      document.cookie = "awsConversationHistory=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
 
       // Close the modal after submission
       setIsFeedbackModalOpen(false);
@@ -363,7 +426,6 @@ export default function Home() {
       setFeedbackRating(null);
 
       // Resets chat state after ending chat
-      localStorage.removeItem("hasIntroduced"); // Resets introduction state
       setMessages([
         {
           role: "assistant",
@@ -383,8 +445,27 @@ export default function Home() {
     }
   }, [messages]);
 
+  // Check authentication
+  useEffect(() => {
+    const checkAuth = async () => {
+      const unsubscribe = auth.onAuthStateChanged((user) => {
+        if (!user) {
+          router.push('/signin');
+        }
+      });
+      
+      return () => unsubscribe();
+    };
+    
+    checkAuth();
+  }, [router]);
+
   const handleSignOut = async () => {
     try {
+      // Clear cookies before signing out
+      document.cookie = "conversationHistory=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      document.cookie = "awsConversationHistory=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      
       await signOut(auth);
       router.push("/signin"); // Redirect to the sign-in page after signing out
     } catch (error) {
@@ -422,6 +503,22 @@ export default function Home() {
               <MessageBox role={message.role}>{message.content}</MessageBox>
             </Box>
           ))}
+
+          {/* Display product results if available */}
+          {productResults.length > 0 && (
+            <Box display="flex" justifyContent="flex-start" mb={1} width="100%">
+              <Box sx={{ maxWidth: '80%' }}>
+                <Typography variant="subtitle2" sx={{ mb: 1, color: 'white' }}>
+                  Here are some products you might be interested in:
+                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  {productResults.map((product) => (
+                    <ProductCard key={product.id} product={product} />
+                  ))}
+                </Box>
+              </Box>
+            </Box>
+          )}
 
           {isLoading && (
             <Box display="flex" justifyContent="flex-start" mb={1}>
